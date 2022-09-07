@@ -1,0 +1,41 @@
+version: "3"
+
+vars:
+  ENVOY_FILTER_WASM: "main.wasm"
+  ENVOY_FILTER_CONFIG: "envoy.yaml"
+
+tasks:
+  build:
+    desc: Build the go binary using tinygo
+    cmds:
+      - tinygo build -o {{.ENVOY_FILTER_WASM}} -scheduler=none -target=wasi ./main.go
+    sources:
+      - ./*.go
+    generates:
+      - "{{.output}}"
+    method: timestamp
+
+
+#  run:
+#    desc: Run {{.ENVOY_FILTER_WASM}} on envoy binary
+#    deps: [ build ]
+#    cmds:
+#      - |
+#        envoy -c {{.ENVOY_FILTER_CONFIG}} --concurrency 2 --log-format '%v'
+
+  run:
+    desc: Run {{.ENVOY_FILTER_WASM}} on envoy container
+    deps: [ build ]
+    cmds:
+      - |
+        docker run -it --rm \
+          -v $PWD/envoy.yaml:/etc/envoy/envoy.yaml \
+          -v $PWD/{{.ENVOY_FILTER_WASM}}:/etc/envoy/{{.ENVOY_FILTER_WASM}} \
+          -p 8001:8001 \
+          -p 38140:38140 \
+          -p 18000:18000 \
+          envoyproxy/envoy:v1.20.0
+
+#    vars:
+#      GIT_COMMIT:
+#        sh: git log -n 1 --format=%h
