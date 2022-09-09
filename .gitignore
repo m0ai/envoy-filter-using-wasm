@@ -150,3 +150,6 @@ Temporary Items
 *.icloud
 
 # End of https://www.toptal.com/developers/gitignore/api/go,goland+all,macos
+
+# Custom
+main.wasm
