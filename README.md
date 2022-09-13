@@ -5,6 +5,7 @@ request 헤더에 포함된 `x-username` 을 확인하여 이를 response 본문
 ### Requirements
 - Docker
 - [Taskfile](https://taskfile.dev/installation/)
+- Kustomize 
 - Go >= 1.9
 
 ### Quick Start
@@ -18,7 +19,7 @@ task: [build] tinygo build -o main.wasm -scheduler=none -target=wasi ./main.go
 $ file main.wasm
 main.wasm: WebAssembly (wasm) binary module version 0x1 (MVP)
 
-$ task run
+$ task run -w
 task: [build] tinygo build -o main.wasm -scheduler=none -target=wasi ./main.go
 task: [run] docker run -it --rm  ...
 
@@ -32,7 +33,7 @@ task: [run] docker run -it --rm  ...
 $ curl localhost:18000 --data "Hello World"
 Hello World, To Anonymous
 ~~~~
-$ curl localhost:18000 --data "Hello World" -H "x-username: m0ai"
+$ curl localhost:18000 --data "Hello World" -H "x-username: m0ai
 Hello World, To m0ai
 ```
 
@@ -43,3 +44,8 @@ Hello World, To m0ai
   - [ ] e2e test ( running on envoy container )
 - [ ] Write Kubernetes Example
   - [ ] k8s/istio sidecar volume injection
+  - [ ] Fetch WASM Code from remote (e.g https://github.com/envoyproxy/envoy/issues/20287)
+
+> kubectl create ns test
+> kubectl label namespace test istio-injection=enabled --overwrite 
+> kubectl create cm -n test wasm-filter --from-file=main.wasm 
