@@ -32,8 +32,16 @@ tasks:
           --component-log-level upstream:debug \
           -c /etc/envoy/envoy.yaml
 
+  infra:deploy:
+   deps: [ build ]
+   cmds:
+     - kustomize build ./infra | kubectl apply -f --
+
+  infra:clean:
+    cmds:
+      - kustomize build ./infra | kubectl delete -f --
+
   clean:
     ignore_error: true
     cmds:
       - docker stop envoy-runner
-
