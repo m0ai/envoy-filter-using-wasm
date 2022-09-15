@@ -8,9 +8,6 @@ on:
   pull_request:
     # Only following types are handled by the action, but one can default to all as well
     types: [opened, reopened, synchronize]
-  # pull_request_target event is required for autolabeler to support PRs from forks
-  # pull_request_target:
-  #   types: [opened, reopened, synchronize]
 
 permissions:
   contents: read
@@ -21,7 +18,44 @@ jobs:
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release-drafter.outputs.upload_url }}
     steps:
       - uses: release-drafter/release-drafter@v5
+        id: release-drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tinygo: [ '0.24.0', '0.25.0' ]
+    name: TinyGo ${{ matrix.tinygo }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: acifani/setup-tinygo@v1
+        with:
+          tinygo-version: ${{ matrix.tinygo }}
+
+      - name: Install Task
+        uses: arduino/setup-task@v1
+
+      - name: Build
+        run: task build
+
+  upload_release_asset:
+    needs:
+      - build_and_test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.update_release_draft.outputs.upload_url }}
+        asset_path: ./my-artifact.zip
+        asset_name: my-artifact.zip
+        asset_content_type: application/zipt
