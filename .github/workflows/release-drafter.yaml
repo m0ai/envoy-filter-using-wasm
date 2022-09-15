@@ -26,8 +26,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-and-test:
+  build_and_test:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
         tinygo: [ '0.24.0', '0.25.0' ]
