@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - main
-  # pull_request event is required only for autolabeler
+    tags:
+      - 'v*'
+
   pull_request:
-    # Only following types are handled by the action, but one can default to all as well
     types: [opened, reopened, synchronize]
 
 permissions:
@@ -18,26 +19,19 @@ jobs:
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.release-drafter.outputs.upload_url }}
     steps:
       - uses: release-drafter/release-drafter@v5
-        id: release-drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build_and_test:
+  upload_release_asset:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        tinygo: [ '0.24.0', '0.25.0' ]
-    name: TinyGo ${{ matrix.tinygo }}
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v2
       - uses: acifani/setup-tinygo@v1
         with:
-          tinygo-version: ${{ matrix.tinygo }}
+          tinygo-version: "0.25.0"
 
       - name: Install Task
         uses: arduino/setup-task@v1
@@ -45,18 +39,13 @@ jobs:
       - name: Build
         run: task build
 
-  upload_release_asset:
-    needs:
-      - build_and_test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.update_release_draft.outputs.upload_url }}
-        asset_path: ./my-artifact.zip
-        asset_name: my-artifact.zip
-        asset_content_type: application/zipt
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./main.wasm
+          asset_name: main.wasm
+          asset_content_type: application/wasm
