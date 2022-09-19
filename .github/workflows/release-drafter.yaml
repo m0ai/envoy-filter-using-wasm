@@ -6,7 +6,6 @@ on:
       - main
     tags:
       - 'v*'
-
   pull_request:
     types: [opened, reopened, synchronize]
 
@@ -19,19 +18,15 @@ jobs:
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.release-drafter.outputs.upload_url }}
     steps:
       - uses: release-drafter/release-drafter@v5
         id: release-drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  upload_release_asset:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
       - uses: actions/checkout@v2
+        if: startsWith(github.ref, 'refs/tags/')
+
       - uses: acifani/setup-tinygo@v1
         with:
           tinygo-version: "0.25.0"
@@ -48,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.update_release_draft.outputs.upload_url }}
+          upload_url:  ${{ steps.release-drafter.outputs.upload_url }}
           asset_path: ./main.wasm
           asset_name: main.wasm
           asset_content_type: application/wasm
