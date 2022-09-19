@@ -1,6 +1,6 @@
 version: "3"
 
-vars:
+env:
   ENVOY_FILTER_WASM: "main.wasm"
   ENVOY_FILTER_CONFIG: "docs/envoy.yaml"
 
@@ -8,23 +8,23 @@ tasks:
   build:
     desc: Build the go binary using tinygo and docker
     cmds:
-       - tinygo build -o {{.ENVOY_FILTER_WASM}} -scheduler=none -target=wasi ./main.go
+       - tinygo build -o $ENVOY_FILTER_WASM --scheduler=none -target=wasi ./main.go
     sources:
       - ./*.go
     generates:
-      - "{{.output}}"
+      - $ENVOY_FILTER_WASM
     method: timestamp
 
   run:
-    desc: Run {{.ENVOY_FILTER_WASM}} on envoy container
+    desc: Run web assembly binary on envoy container
     deps: [ build ]
     cmds:
       - defer: { task: clean }
       - |
         docker run -it --rm \
           --name envoy-runner \
-          -v $PWD/{{.ENVOY_FILTER_CONFIG}}:/etc/envoy/envoy.yaml \
-          -v $PWD/{{.ENVOY_FILTER_WASM}}:/etc/envoy/{{.ENVOY_FILTER_WASM}} \
+          -v $PWD/$ENVOY_FILTER_CONFIG:/etc/envoy/envoy.yaml \
+          -v $PWD/$ENVOY_FILTER_WASM:/etc/envoy/$ENVOY_FILTER_WASM \
           -p 8001:8001 \
           -p 38140:38140 \
           -p 18000:18000 \
