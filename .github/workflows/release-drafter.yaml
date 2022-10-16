@@ -12,6 +12,9 @@ on:
 permissions:
   contents: read
 
+env:
+  ENVOY_FILTER_WASM_OUTPUT: bin.wasm
+
 jobs:
   update_release_draft:
     permissions:
@@ -25,7 +28,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v2
-        if: startsWith(github.ref, 'refs/tags/')
 
       - uses: acifani/setup-tinygo@v1
         with:
@@ -44,6 +46,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url:  ${{ steps.release-drafter.outputs.upload_url }}
-          asset_path: ./main.wasm
+          asset_path: ${{ env.ENVOY_FILTER_WASM_OUTPUT }}
           asset_name: main.wasm
           asset_content_type: application/wasm
