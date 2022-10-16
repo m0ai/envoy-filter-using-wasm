@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  ENVOY_FILTER_WASM_OUTPUT: bin.wasm
+  WASM_OUTPUT: bin.wasm
 
 jobs:
   update_release_draft:
@@ -46,6 +46,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url:  ${{ steps.release-drafter.outputs.upload_url }}
-          asset_path: ${{ env.ENVOY_FILTER_WASM_OUTPUT }}
-          asset_name: main.wasm
+          asset_path: ./${{ env.WASM_OUTPUT }}
+          asset_name: bin.wasm
           asset_content_type: application/wasm
